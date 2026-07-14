@@ -13,10 +13,10 @@ use platers_server::{build_router, cors_layer, AppState};
 #[command(name = "platers-server", about = "Plate-solving web service")]
 struct Args {
     /// Directory of merged `.qidx` index files.
-    #[arg(long, default_value = "data/index")]
+    #[arg(long, default_value = "index")]
     index_dir: PathBuf,
     /// Catalog parquet used for refinement.
-    #[arg(long, default_value = "data/catalog.parquet")]
+    #[arg(long, default_value = "catalog.parquet")]
     catalog: PathBuf,
     /// Address to bind the HTTP server to.
     #[arg(long, default_value = "127.0.0.1:8080")]

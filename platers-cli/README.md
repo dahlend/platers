@@ -9,13 +9,13 @@ it the star list.
 
 ```bash
 platers-cli solve \
-    --input stars.json --index-dir data/index \
+    --input stars.json --index-dir index \
     --width 2048 --height 1489 \
     --scale 0.39 --scale-uncertainty 0.05 \
     --output solution.json
 ```
 
-`platers-cli info --index-dir data/index` summarizes an index. Scale and
+`platers-cli info --index-dir index` summarizes an index. Scale and
 position hints are optional but make solving much faster.
 
 Part of the [Platers](https://github.com/ddahlen/platers) workspace; see the

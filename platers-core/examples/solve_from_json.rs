@@ -11,7 +11,7 @@
 //!
 //! ```text
 //! cargo run --release -p platers-core --example solve_from_json -- \
-//!     stars.json data/index <width> <height> [scale_arcsec_per_pixel]
+//!     stars.json index <width> <height> [scale_arcsec_per_pixel]
 //! ```
 
 use std::path::Path;

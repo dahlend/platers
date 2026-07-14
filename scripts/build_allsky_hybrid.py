@@ -8,8 +8,8 @@ lies within --match-radius of it. Uses a HEALPix bucket join so the dedup is
 all-sky without an O(N^2) cross-match.
 
 Usage: python scripts/build_allsky_hybrid.py \
-    --gaia-tiles data/sources/gaia_allsky_tiles --tycho2 data/sources/tycho2_full/catalog.parquet \
-    --out data/catalog.parquet
+    --gaia-tiles gaia_tiles --tycho2 tycho2.parquet \
+    --out catalog.parquet
 """
 
 from __future__ import annotations
@@ -30,9 +30,9 @@ def radec_to_vec(ra, dec):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--gaia-tiles", default="data/sources/gaia_allsky_tiles")
-    p.add_argument("--tycho2", default="data/sources/tycho2_full/catalog.parquet")
-    p.add_argument("--out", default="data/catalog.parquet")
+    p.add_argument("--gaia-tiles", default="gaia_tiles")
+    p.add_argument("--tycho2", default="tycho2.parquet")
+    p.add_argument("--out", default="catalog.parquet")
     p.add_argument(
         "--match-radius",
         type=float,

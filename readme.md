@@ -4,20 +4,57 @@
 
 # Platers
 
-Platers is a Rust library and toolset for computing the astrometry of a
-sky image -- *plate solving*. It identifies star asterisms with geometric hashing and
-is built to solve **many images quickly**: the index is memory-mapped and stays
-resident, so each solve runs without re-reading the sky.
+Platers figures out where in the sky an image was pointed by matching its stars against
+a reference catalog. The technical term for this is Plate Solving.
 
-Platers produces a **first-pass** WCS -- a sub-arcsecond solution good enough to
-stand on its own or to seed a later step. Squeezing out state-of-the-art
-astrometry takes a further refinement pass against a deep catalog, which is
-outside Platers' scope.
+Platers is a Rust library and toolset that identifies star asterisms with geometric
+hashing and is built to solve **many images quickly**: the index is memory-mapped and
+stays resident, so each solve runs without re-reading the sky.
+
+Platers produces a World Coordinate System (WCS) accurate to sub-arcsecond, good enough
+to stand on its own or to seed a later step. Squeezing out state-of-the-art
+astrometry takes a further refinement pass against a more complete stellar catalog,
+which is outside Platers' scope.
+
+Its important to note that Platers does **not** operate on raw images, pixel coordinates
+of stars must be provided as inputs.
+
+## Typical Performance
+
+This tool is designed to be fast, if you have a position hint most WCS solutions are
+found in less than 0.25 seconds. Blind searches typically take less than 1-2 seconds.
+
+Note that we also include proper motion, so if a date of observation is available that
+can improve astrometry by a few fractions of an arcsecond.
+
+The default catalog settings are designed for typical ground telescopes, however the
+catalog builder will happily function on other pixel scales. In those cases a custom
+stellar catalog that goes deeper than 13.5 mag will need to be constructed. See below
+for more details.
+
+## The dataset
+
+The full dataset is large (multi-GB) and rebuildable. A prebuilt 
+catalog.parquet file is available in the initial release assets on github. 
+Everything can be rebuilt from scratch, however it takes time:
+
+- **the reference catalog** (`catalog.parquet`) - Gaia DR3 to G <= 13.5
+  (Gaia-preferred), plus Tycho-2 for the bright stars Gaia misses. ~11.2M stars.
+  Used for verification, refinement, and distortion (SIP) fitting.
+- **the all-sky quad index** (`.qidx`) - built at a uniform target **stellar
+  density** (~70 stars/deg^2) rather than a flat magnitude cut, so index size is
+  decoupled from catalog depth and small fields still get enough stars. (Without
+  `--target-density`, the builder falls back to a flat `--stars-per-cell` cap,
+  default 10.)
+- **the source inputs** - what the catalog is rebuilt from (raw Gaia tiles and
+  the Tycho-2 catalog).
+
+A catalog is just a Parquet table of `ra, dec, mag` in degrees (plus an `id`).
 
 ## How it works
 
 A solve takes a list of detected source pixel positions (plus brightnesses) and
-recovers the WCS -- where on the sky the image was taken, at what scale and rotation.
+recovers the WCS - where on the sky the image was taken, at what scale and rotation.
 
 1. **Uniformize** the detected stars on a grid sized to the index's `HEALPix`
    cells (brightest-per-cell), so density is even regardless of how crowded the
@@ -40,90 +77,16 @@ recovers the WCS -- where on the sky the image was taken, at what scale and rota
 | `platers-server` | web service -- submit pixel detections over HTTP, get a WCS back |
 | `platers-tests` | integration tests and benchmarks |
 
-## Quickstart (no dataset needed)
+## Quickstart
 
-The real dataset is multi-GB and takes hours to build (below), but you can see a
-full solve in under a minute using the committed ~3 MB test-fixture catalog:
+Platers solves against two files: the reference catalog (`catalog.parquet`) and
+the quad index (`index/`). Download `catalog.parquet` from the
+[release assets](https://github.com/ddahlen/platers/releases) and build the index
+from it once -- see [Building the dataset](#building-the-dataset).
 
-```bash
-# 1. Build a tiny index from the fixture catalog (seconds)
-cargo run --release -p platers-build --bin build_index -- \
-    --catalog platers-tests/fixtures/fixture_catalog.parquet \
-    --output demo_tiles --min-scale-arcmin 3.0 --max-scale-deg 0.4
-cargo run --release -p platers-build --bin merge_scale_qidx -- demo_tiles demo_index
-
-# 2. Generate a synthetic detected-star field over that catalog
-#    (writes demo_stars.json and prints the ground-truth pose)
-cargo run --release -p platers-tests --example make_demo_field
-
-# 3. Solve it and compare against the printed ground truth
-cargo run --release -p platers-cli -- solve \
-    --input demo_stars.json --index-dir demo_index \
-    --width 2048 --height 1489 --scale 0.88
-```
-
-The fixture covers one sky region (around RA 180, Dec +45), so it only solves
-fields generated over it -- for real images, build the all-sky dataset below.
-
-## The dataset
-
-The default dataset lives in `data/` (gitignored -- it's large and rebuildable):
-
-- **`data/catalog.parquet`** -- the reference catalog: Gaia DR3 to G <= 13.5
-  (Gaia-preferred), plus Tycho-2 for the bright stars Gaia misses. ~11.2M stars.
-  Used for verification, refinement, and distortion (SIP) fitting.
-- **`data/index/`** -- the all-sky quad index (`.qidx`), built at a uniform target
-  **stellar density** (~70 stars/deg^2) rather than a flat magnitude cut, so index
-  size is decoupled from catalog depth and small fields still get enough stars.
-  (Without `--target-density`, the builder falls back to a flat `--stars-per-cell`
-  cap, default 10 -- what the quickstart above uses.)
-- **`data/sources/`** -- the inputs the catalog is rebuilt from (raw Gaia tiles and
-  the Tycho-2 catalog).
-
-A catalog is just a Parquet table of `ra, dec, mag` in degrees (plus an `id`).
-
-## Building the dataset
-
-Needs `pip install numpy scipy pyarrow astroquery`, ~10 GB free disk, and
-patience: step 1 runs for **hours** (400 async archive jobs, but resumable --
-re-run until it prints `(complete)`), and step 3 is CPU-bound for **tens of
-minutes to hours**. Always build with `--release`.
-
-```bash
-# 0. One-time: convert a Tycho-2 export (VizieR I/259, delimited w/ header)
-#    into the bright-star fill catalog
-cargo run --release -p platers-build --bin build_catalog -- \
-    --source tycho2 --input tycho2.tsv --max-mag 12.0 \
-    --output data/sources/tycho2_full/catalog.parquet
-
-# 1. Fetch Gaia DR3 to G<=13.5, tiled and resumable (slow -- see above)
-python scripts/fetch_gaia_allsky.py --maglim 13.5
-
-# 2. Merge Gaia + Tycho-2 bright fill into the reference catalog (minutes;
-#    Gaia wins any duplicate within 2", Tycho-2 fills the saturated bright end)
-python scripts/build_allsky_hybrid.py --out data/catalog.parquet
-
-# 3. Build the density-targeted quad index, then merge per-scale all-sky files
-cargo run --release -p platers-build --bin build_index -- \
-    --catalog data/catalog.parquet --output data/index_tiles \
-    --min-scale-arcmin 3.0 --max-scale-deg 0.45 --target-density 70
-cargo run --release -p platers-build --bin merge_scale_qidx -- \
-    data/index_tiles data/index
-
-# 4. Sanity-check the result (per-tier scales, quad/star counts)
-cargo run --release -p platers-cli -- info --index-dir data/index
-```
-
-Steps 0-2 only change with a new magnitude limit or source catalog; steps 3-4
-re-run from the existing `data/catalog.parquet` whenever index parameters
-change. `data/index_tiles` is an intermediate and can be deleted after the
-merge.
-
-## Solving
-
-The solver works on a **pre-extracted** star list -- it does *not* detect stars, so
-run your detection (`photutils`, `SExtractor`, `retego`, ...) first and hand it a JSON array
-of 0-based pixel positions and brightnesses:
+Platers works on a **pre-extracted** star list (it does *not* detect stars), so
+hand it your detections as a JSON array of 0-based pixel positions and
+brightnesses (`stars.json`):
 
 ```json
 [
@@ -132,9 +95,67 @@ of 0-based pixel positions and brightnesses:
 ]
 ```
 
+With `catalog.parquet` and `index/` on disk, one command solves the frame -- pass
+the image dimensions and pixel scale (arcsec/pixel):
+
 ```bash
 cargo run --release -p platers-cli -- solve \
-    --input stars.json --index-dir data/index \
+    --input stars.json --index-dir index \
+    --width 2048 --height 4096 --scale 1.0 \
+    --ra 214.6 --dec -1.7 --radius 3.0 \
+    --output solution.json
+```
+
+`solution.json` holds the fitted WCS (sky center, scale, rotation) and the number
+of catalog stars matched. The `--ra`/`--dec`/`--radius` position hint is optional
+but cuts the solve to a fraction of a second; drop it for a blind search.
+
+## Building the dataset
+
+Needs `pip install numpy scipy pyarrow astroquery`, ~10 GB free disk, and
+patience: step 1 runs for **hours** (400 async archive jobs, but resumable -
+re-run until it prints `(complete)`), and step 3 is CPU-bound for **tens of
+minutes to hours**. Always build with `--release`.
+
+```bash
+# 0. One-time: convert a Tycho-2 export (VizieR I/259, delimited w/ header)
+#    into the bright-star fill catalog
+cargo run --release -p platers-build --bin build_catalog -- \
+    --source tycho2 --input tycho2.tsv --max-mag 12.0 \
+    --output tycho2.parquet
+
+# 1. Fetch Gaia DR3 to G<=13.5, tiled and resumable (slow -- see above)
+python scripts/fetch_gaia_allsky.py --maglim 13.5 --out gaia_tiles
+
+# 2. Merge Gaia + Tycho-2 bright fill into the reference catalog (minutes;
+#    Gaia wins any duplicate within 2", Tycho-2 fills the saturated bright end)
+python scripts/build_allsky_hybrid.py \
+    --gaia-tiles gaia_tiles --tycho2 tycho2.parquet --out catalog.parquet
+
+# 3. Build the density-targeted quad index, then merge per-scale all-sky files
+cargo run --release -p platers-build --bin build_index -- \
+    --catalog catalog.parquet --output index_tiles \
+    --min-scale-arcmin 3.0 --max-scale-deg 0.45 --target-density 70
+cargo run --release -p platers-build --bin merge_scale_qidx -- \
+    index_tiles index
+
+# 4. Sanity-check the result (per-tier scales, quad/star counts)
+cargo run --release -p platers-cli -- info --index-dir index
+```
+
+Steps 0-2 only change with a new magnitude limit or source catalog; steps 3-4
+re-run from the existing `catalog.parquet` whenever index parameters change.
+`index_tiles` is an intermediate and can be deleted after the merge.
+
+## Solving CLI
+
+[Quickstart](#quickstart) shows the basic solve; this section is the full set of
+options. Run your own source detection (`photutils`, `SExtractor`, `retego`, ...)
+first -- Platers does not detect stars.
+
+```bash
+cargo run --release -p platers-cli -- solve \
+    --input stars.json --index-dir index \
     --width 2048 --height 4096 \
     --scale 1.0 --scale-uncertainty 0.1 \
     --ra 214.6 --dec -1.7 --radius 3.0 \
@@ -143,7 +164,7 @@ cargo run --release -p platers-cli -- solve \
 
 Scale and position hints are optional but make solving much faster; with none, the
 solver falls back to a (slower) blind search. By default the final fit refines
-against the index's own (uniformized) stars; `--catalog data/catalog.parquet`
+against the index's own (uniformized) stars; `--catalog catalog.parquet`
 instead refines against the dense catalog around the solved center -- more matched
 stars and lower residuals, the same as the server. `--sip-order N` (2-5, off by
 default) additionally fits SIP distortion polynomials of order `N` to the final
@@ -156,7 +177,7 @@ own stars carry no proper motions). `--output` writes the result as JSON -- the
 fitted WCS plus the verification (matched-star count and log-odds) and solve counts.
 `--max-quads` / `--max-hypotheses` cap the search (defaults 300000 / 200000).
 `--verbose` streams the quad/hypothesis counts and log-odds as it runs, and
-`platers-cli info --index-dir data/index` summarizes an index (scales, quad/star
+`platers-cli info --index-dir index` summarizes an index (scales, quad/star
 counts, diameter ranges).
 
 To use the library directly, see `platers-core/examples/`
@@ -164,14 +185,14 @@ To use the library directly, see `platers-core/examples/`
 
 To go straight from a raw FITS frame, `scripts/fits_solve.py` extracts sources
 (PSF-matched detection plus recovery of saturated bright stars) and solves against
-`data/index`, scoring the result against the frame's header WCS when present.
+your index, scoring the result against the frame's header WCS when present.
 It additionally needs `pip install numpy astropy scipy retego` (or `photutils`
 in place of `retego` for the fallback extractor, `--extractor photutils`; or
 `--extractor cat` to read sources from an embedded SExtractor table instead of
 detecting them):
 
 ```bash
-python scripts/fits_solve.py frame.fits.gz --solve --radius 3.0
+python scripts/fits_solve.py frame.fits.gz --index-dir index --solve --radius 3.0
 ```
 
 ## Running the server
@@ -183,12 +204,13 @@ catalog once, keeps them resident (no per-request reload), and answers over HTTP
 cargo run --release -p platers-server
 ```
 
-Defaults: serves on `127.0.0.1:8080`, loads `data/index` + `data/catalog.parquet`,
-and pre-faults the index into RAM before accepting requests. Flags:
+By default it serves on `127.0.0.1:8080` and pre-faults the index into RAM before
+accepting requests; point it at your index and catalog with `--index-dir` and
+`--catalog`. Flags:
 
 ```bash
 cargo run --release -p platers-server -- \
-    --index-dir data/index --catalog data/catalog.parquet \
+    --index-dir index --catalog catalog.parquet \
     --bind 0.0.0.0:8080 \
     --max-concurrency 8 \      # simultaneous solves (default: CPU cores)
     --max-queued 32 \          # extra solves allowed to queue before 503 (default: 4x concurrency)

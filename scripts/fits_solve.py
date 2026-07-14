@@ -24,11 +24,11 @@ Examples
 
     # extract and solve against the merged all-sky hybrid index, scored vs header
     python scripts/fits_solve.py frame.fits --solve \
-        --index-dir data/index
+        --index-dir index
 
     # batch over the bundled LCO frames
     python scripts/fits_solve.py *-e91.fits --solve \
-        --index-dir data/index
+        --index-dir index
 
 Requires: numpy, astropy, scipy, and retego (or photutils for the fallback
 extractor: `--extractor photutils`).
@@ -551,8 +551,8 @@ def main():
     p.add_argument(
         "--index-dir",
         type=Path,
-        default=Path("data/index"),
-        help="directory of .qidx indices (default: data/index)",
+        default=Path("index"),
+        help="directory of .qidx indices (default: index)",
     )
     p.add_argument(
         "--nstars", type=int, default=150, help="keep the brightest N sources"

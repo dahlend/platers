@@ -3,7 +3,7 @@
 //! Usage:
 //!
 //! ```text
-//! cargo run --release -p platers-core --example index_info -- data/index
+//! cargo run --release -p platers-core --example index_info -- index
 //! ```
 
 use std::path::Path;

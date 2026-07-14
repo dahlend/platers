@@ -11,7 +11,7 @@ without re-reading the sky.
 ```rust
 use platers_core::{DetectedField, IndexSet, PlateSolver, QueryConfig, ScaleRange};
 
-let index = IndexSet::load_from_directory("data/index")?;
+let index = IndexSet::load_from_directory("index")?;
 let field = DetectedField::new(stars, 2048, 1489); // stars: Vec<DetectedStar>
 let config = QueryConfig {
     scale_hint: Some(ScaleRange::from_nominal(0.39, 0.05)),

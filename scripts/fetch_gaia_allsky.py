@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--maglim", type=float, default=13.5)
-    p.add_argument("--out", default="data/sources/gaia_allsky_tiles")
+    p.add_argument("--out", default="gaia_tiles")
     p.add_argument("--dec-step", type=float, default=9.0)
     p.add_argument("--ra-step", type=float, default=18.0)
     p.add_argument("--retries", type=int, default=4)

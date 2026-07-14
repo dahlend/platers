@@ -12,7 +12,7 @@
 //! use platers_core::{DetectedField, IndexSet, PlateSolver, QueryConfig, ScaleRange};
 //!
 //! # fn main() -> platers_core::PlatersResult<()> {
-//! let index = IndexSet::load_from_directory("data/index")?;
+//! let index = IndexSet::load_from_directory("index")?;
 //! let stars = vec![/* DetectedStar { x, y, flux } from your source extractor */];
 //! let field = DetectedField::new(stars, 2048, 1489);
 //! let config = QueryConfig {

@@ -9,7 +9,7 @@ star list; failures are counted, logged, and optionally persisted for offline
 replay.
 
 ```bash
-platers-server --index-dir data/index --catalog data/catalog.parquet \
+platers-server --index-dir index --catalog catalog.parquet \
     --bind 127.0.0.1:8080
 ```
 
