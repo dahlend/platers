@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32" role="img" aria-label="Platers">
+  <!-- Small-size / favicon variant of the Full Plate mark: the inner rim is
+       dropped and every stroke and star is thickened so the mark stays legible
+       at 16-32 px. Ink follows the viewer's color scheme. -->
+  <style>
+    .ink { stroke: #232b3d; }
+    .star { fill: #b9822f; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #e9edf4; }
+      .star { fill: #e2b45a; }
+    }
+  </style>
+  <circle cx="32" cy="32" r="26" fill="none" class="ink" stroke-width="4"/>
+  <polygon points="24.5,26 40,24.5 42.5,39 28,41.5" fill="none" class="ink" stroke-width="2" opacity="0.8" stroke-linejoin="round"/>
+  <circle cx="24.5" cy="26" r="4.2" class="star"/>
+  <circle cx="40" cy="24.5" r="3.2" class="star"/>
+  <circle cx="42.5" cy="39" r="3.6" class="star"/>
+  <circle cx="28" cy="41.5" r="2.9" class="star"/>
+</svg>

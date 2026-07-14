@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Platers logo: a plate serving a four-star quad">
+  <!-- "Full Plate": a plate seen from above, serving a quad (the four-star
+       asterism the solver matches). Ink follows the viewer's color scheme. -->
+  <style>
+    .ink { stroke: #232b3d; }
+    .star { fill: #b9822f; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #e9edf4; }
+      .star { fill: #e2b45a; }
+    }
+  </style>
+  <circle cx="32" cy="32" r="27" fill="none" class="ink" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="19.5" fill="none" class="ink" stroke-width="1.2" opacity="0.5"/>
+  <polygon points="24.5,26 40,24.5 42.5,39 28,41.5" fill="none" class="ink" stroke-width="1.1" opacity="0.75" stroke-linejoin="round"/>
+  <circle cx="24.5" cy="26" r="3.2" class="star"/>
+  <circle cx="40" cy="24.5" r="2.2" class="star"/>
+  <circle cx="42.5" cy="39" r="2.6" class="star"/>
+  <circle cx="28" cy="41.5" r="1.9" class="star"/>
+</svg>

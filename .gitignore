@@ -1,0 +1,9 @@
+/target
+.DS_Store
+
+# Default dataset: the all-sky hybrid catalog + index (~4 GB). Not committed --
+# rebuildable via scripts/fetch_gaia_allsky.py + build_allsky_hybrid.py + build_index.
+/data/
+
+__pycache__/
+*.pyc

@@ -1,0 +1,106 @@
+[workspace]
+members = [
+    "platers-core",
+    "platers-build",
+    "platers-server",
+    "platers-cli",
+    "platers-tests",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ddahlen/platers"
+keywords = ["astronomy", "astrometry", "plate-solving", "wcs", "fits"]
+categories = ["science", "aerospace"]
+
+[workspace.dependencies]
+platers-core = { path = "platers-core", version = "0.1.0" }
+platers-build = { path = "platers-build", version = "0.1.0" }
+
+# Shared dependencies across crates
+rayon = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"
+rand_chacha = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[workspace.lints]
+rust.keyword_idents_2024 = "deny"
+rust.non_ascii_idents = "deny"
+rust.non_local_definitions = "deny"
+rust.unsafe_op_in_unsafe_fn = "deny"
+rust.missing_debug_implementations = "deny"
+rust.missing_docs = "deny"
+rust.dead_code = "deny"
+rust.bad_style = { level = "deny", priority = -1 }
+rust.improper_ctypes = "deny"
+rust.while_true = "deny"
+rust.patterns_in_fns_without_body = "deny"
+rust.path_statements = "deny"
+rust.overflowing_literals = "deny"
+rust.no_mangle_generic_items = "deny"
+rust.non_shorthand_field_patterns = "deny"
+rust.unused_extern_crates = "deny"
+rust.unused_import_braces = "deny"
+rust.unused_qualifications = "deny"
+rust.unused_results = "deny"
+rust.unnameable_types = "deny"
+rust.unreachable_pub = "deny"
+rust.unused_lifetimes = "deny"
+rust.unused_macro_rules = "deny"
+rust.unused = { level = "deny", priority = -1 }
+rust.unconditional_recursion = "deny"
+rust.trivial_numeric_casts = "deny"
+rust.trivial_casts = "deny"
+rust.elided_lifetimes_in_paths = "deny"
+rust.unexpected_cfgs = "deny"
+
+clippy.perf = { level = "deny", priority = 1 }
+clippy.pedantic = { level = "deny", priority = 1 }
+
+# Pedantic overrides
+clippy.float_cmp = {level = "allow", priority = 2 }
+clippy.inline_always = {level = "allow", priority = 2 }
+clippy.unreadable-literal = {level = "allow", priority = 2}
+clippy.similar_names = {level = "allow", priority = 2}
+clippy.too_many_lines = {level = "allow", priority = 2}
+clippy.cast_precision_loss = {level = "allow", priority = 2}
+clippy.cast_possible_truncation = {level = "allow", priority = 2}
+
+# General list
+# priority 2 so these override the pedantic group (priority 1).
+clippy.too_many_arguments = { level = "allow", priority = 2 }
+clippy.type_complexity = { level = "allow", priority = 2 }
+clippy.allow_attributes_without_reason = "warn"
+clippy.collection_is_never_read = "warn"
+clippy.dbg_macro = "warn"
+clippy.debug_assert_with_mut_call = "warn"
+clippy.doc_markdown = "warn"
+clippy.fn_to_numeric_cast_any = "warn"
+clippy.infinite_loop = "warn"
+clippy.large_stack_arrays = "warn"
+clippy.mismatching_type_param_order = "warn"
+clippy.missing_assert_message = "warn"
+clippy.missing_fields_in_debug = "warn"
+clippy.same_functions_in_if_condition = "warn"
+clippy.semicolon_if_nothing_returned = "warn"
+clippy.should_panic_without_expect = "warn"
+clippy.todo = "warn"
+clippy.unseparated_literal_suffix = "warn"
+clippy.use_self = "warn"
+clippy.cargo_common_metadata = "warn"
+clippy.negative_feature_names = "warn"
+clippy.redundant_feature_names = "warn"
+clippy.wildcard_enum_match_arm = "warn"
+clippy.wildcard_dependencies = "warn"
+clippy.fallible_impl_from = "warn"
+clippy.unneeded_field_pattern = "warn"
+clippy.fn_params_excessive_bools = "warn"
+
+clippy.must_use_candidate = "deny"

@@ -1,0 +1,23 @@
+[package]
+name = "platers-build"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+description = "Index building tools for plate solving"
+
+[dependencies]
+platers-core = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+tracing-subscriber = "0.3"
+cdshealpix = "0.7"
+csv = "1.3"
+
+[dev-dependencies]
+
+[lints]
+workspace = true

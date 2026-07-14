@@ -1,0 +1,25 @@
+[package]
+name = "platers-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Integration tests and benchmarks"
+# Internal test harness; never publish.
+publish = false
+
+[dependencies]
+platers-core = { workspace = true }
+platers-build = { workspace = true }
+fitsy = "0.1.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }
+rand_distr = "0.4"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+chrono = "0.4"
+
+[lints]
+workspace = true
